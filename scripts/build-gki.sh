@@ -62,13 +62,8 @@ static DEFINE_IDA(susfs_mnt_group_ida);\
 #endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\
 ' fs/namespace.c
 fi
-# Clean up the rejection file so the build area stays clean
 rm -f fs/namespace.c.rej
 cd ..
-
-echo "=== Configuring KSU & SUSFS for Kleaf ==="
-sed -i '/default [yn]/d' KernelSU-Next/kernel/Kconfig || true
-sed -i 's/^config .*/&\n\tdefault y/g' KernelSU-Next/kernel/Kconfig || true
 
 echo "=== Building GKI via Kleaf (Bazel) ==="
 tools/bazel run --color=no --curses=no //common:kernel_aarch64_dist -- --dist_dir="${DIST_DIR}" 2>&1 | tee build.log
