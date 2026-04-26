@@ -7,37 +7,43 @@ DIST_DIR="out/dist"
 cd "${WORKSPACE}"
 
 echo "=== Applying ABI Fixes ==="
-echo "Neutralizing ABI protected exports for Pixel compatibility..."
 > common/android/abi_gki_protected_exports_aarch64
 > common/android/abi_gki_protected_exports_x86_64
 
 echo "=== Integrating KernelSU-Next ==="
-echo "Cloning shoey63/KernelSU-Next..."
 git clone https://github.com/shoey63/KernelSU-Next.git -b pixel9-susfs-gki-android14-6.1 KernelSU-Next
 
-echo "Running KernelSU-Next setup..."
 bash KernelSU-Next/kernel/setup.sh
 
 echo "Restoring the custom pixel9-susfs branch..."
 cd KernelSU-Next
 git checkout pixel9-susfs-gki-android14-6.1
+
+# --- HARD DEBUG TRAP ---
+echo "Verifying Git state..."
+CURRENT_BRANCH=$(git branch --show-current)
+if [ "$CURRENT_BRANCH" != "pixel9-susfs-gki-android14-6.1" ]; then
+    echo "CRITICAL ERROR: KernelSU-Next branch hijack detected!"
+    echo "Currently on branch: $CURRENT_BRANCH"
+    echo "Current commit:"
+    git log -1
+    exit 1
+fi
+echo "Git branch verified: $CURRENT_BRANCH. Proceeding."
 cd ..
 
-# --- THE BAZEL FIX ---
+# Replace symlink with hard copy to bypass Bazel sandbox issues
 echo "Replacing KSU symlink with a hard copy for the Bazel sandbox..."
-rm common/drivers/kernelsu
+rm -f common/drivers/kernelsu
 cp -r KernelSU-Next/kernel common/drivers/kernelsu
 
-# Force all KernelSU Kconfigs to default to 'y' directly in the copied folder 
-# This prevents Kleaf from throwing a savedefconfig error!
+# Strip config constraints
 sed -i '/default [yn]/d' common/drivers/kernelsu/Kconfig || true
 sed -i 's/^config .*/&\n\tdefault y/g' common/drivers/kernelsu/Kconfig || true
 
 echo "=== Integrating susfs4ksu ==="
-echo "Cloning shoey63/susfs4ksu..."
 git clone https://gitlab.com/shoey63/susfs4ksu.git -b gki-android14-6.1-dev susfs4ksu
 
-echo "Copying susfs source files..."
 cp -r susfs4ksu/kernel_patches/fs/* common/fs/
 cp -r susfs4ksu/kernel_patches/include/linux/* common/include/linux/
 
@@ -46,13 +52,11 @@ cd common
 cp ../susfs4ksu/kernel_patches/50_add_susfs_in_*.patch .
 patch -p1 < 50_add_susfs_in_*.patch || true
 
-# --- User's Manual Hunk #1 Fix ---
+# --- Unwrapped Manual Hunk #1 Fix ---
 if ! grep -q 'susfs_def.h' fs/namespace.c; then
   echo "Applying manual fs/namespace.c include fix..."
   sed -i '/#include <linux\/mnt_idmapping.h>/a\
-#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\
 #include <linux/susfs_def.h>\
-#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\
 ' fs/namespace.c
 fi
 
@@ -60,7 +64,6 @@ if ! grep -q 'susfs_mnt_id_ida' fs/namespace.c; then
   echo "Applying manual fs/namespace.c SUSFS mount declarations fix..."
   sed -i '/#include "internal.h"/a\
 \
-#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\
 extern bool susfs_is_current_ksu_domain(void);\
 extern struct static_key_false susfs_set_sdcard_android_data_decrypted_key_false;\
 \
@@ -68,8 +71,6 @@ extern struct static_key_false susfs_set_sdcard_android_data_decrypted_key_false
 \
 static DEFINE_IDA(susfs_mnt_id_ida);\
 static DEFINE_IDA(susfs_mnt_group_ida);\
-\
-#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\
 ' fs/namespace.c
 fi
 rm -f fs/namespace.c.rej
