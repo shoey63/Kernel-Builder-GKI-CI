@@ -52,6 +52,14 @@ cd common
 cp ../susfs4ksu/kernel_patches/50_add_susfs_in_*.patch .
 patch -p1 < 50_add_susfs_in_*.patch || true
 
+# --- Unwrapped Manual Hunk #1 Fix ---
+if ! grep -q 'susfs_def.h' fs/namespace.c; then
+  echo "Applying manual fs/namespace.c include fix..."
+  sed -i '/#include <linux\/mnt_idmapping.h>/a\
+#include <linux/susfs_def.h>\
+' fs/namespace.c
+fi
+
 # THE FIX: Look for the specific DEFINE_IDA declaration, not just the name!
 if ! grep -q 'DEFINE_IDA(susfs_mnt_id_ida)' fs/namespace.c; then
   echo "Applying manual fs/namespace.c SUSFS mount declarations fix..."
@@ -67,6 +75,7 @@ static DEFINE_IDA(susfs_mnt_group_ida);\
 ' fs/namespace.c
 fi
 rm -f fs/namespace.c.rej
+
 cd ..
 
 echo "=== Building GKI via Kleaf (Bazel) ==="
