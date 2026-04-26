@@ -45,6 +45,27 @@ if [ -f "fs/namespace.c.rej" ]; then
 fi
 cd ..
 
+echo "=== Configuring KSU & SUSFS for Kleaf ==="
+# 1. Flip defaults in KSU Kconfig as per the susfs documentation
+sed -i 's/default n/default y/g' KernelSU-Next/kernel/Kconfig || true
+
+# 2. Force enable KSU and all SUSFS features directly in the GKI defconfig
+GKI_DEFCONFIG="common/arch/arm64/configs/gki_defconfig"
+echo "CONFIG_KSU=y" >> "$GKI_DEFCONFIG"
+echo "CONFIG_KSU_SUSFS=y" >> "$GKI_DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_HAS_MAGIC_MOUNT=y" >> "$GKI_DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> "$GKI_DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_SUS_MOUNT=y" >> "$GKI_DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT=y" >> "$GKI_DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT=y" >> "$GKI_DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_SUS_KSTAT=y" >> "$GKI_DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_SUS_OVERLAYFS=y" >> "$GKI_DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_TRY_UMOUNT=y" >> "$GKI_DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_SPOOF_UNAME=y" >> "$GKI_DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_ENABLE_LOG=y" >> "$GKI_DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y" >> "$GKI_DEFCONFIG"
+echo "CONFIG_KSU_SUSFS_SUS_SU=y" >> "$GKI_DEFCONFIG"
+
 echo "=== Building GKI via Kleaf (Bazel) ==="
 tools/bazel run --color=no --curses=no //common:kernel_aarch64_dist -- --dist_dir="${DIST_DIR}" 2>&1 | tee build.log
 
