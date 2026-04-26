@@ -20,6 +20,12 @@ git clone https://github.com/shoey63/KernelSU-Next.git -b pixel9-susfs-gki-andro
 echo "Running KernelSU-Next setup..."
 bash KernelSU-Next/kernel/setup.sh
 
+# Restore the custom branch!
+echo "Restoring the custom pixel9-susfs branch..."
+cd KernelSU-Next
+git checkout pixel9-susfs-gki-android14-6.1
+cd ..
+
 echo "=== Building GKI via Kleaf (Bazel) ==="
 tools/bazel run --color=no --curses=no //common:kernel_aarch64_dist -- --dist_dir="${DIST_DIR}" 2>&1 | tee build.log
 
