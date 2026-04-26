@@ -75,7 +75,6 @@ static DEFINE_IDA(susfs_mnt_group_ida);\
 ' fs/namespace.c
 fi
 rm -f fs/namespace.c.rej
-
 cd ..
 
 echo "=== Building GKI via Kleaf (Bazel) ==="
