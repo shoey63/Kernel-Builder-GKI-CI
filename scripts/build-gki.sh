@@ -23,6 +23,16 @@ cd KernelSU-Next
 git checkout pixel9-susfs-gki-android14-6.1
 cd ..
 
+# --- THE BAZEL FIX ---
+echo "Replacing KSU symlink with a hard copy for the Bazel sandbox..."
+rm common/drivers/kernelsu
+cp -r KernelSU-Next/kernel common/drivers/kernelsu
+
+# Force all KernelSU Kconfigs to default to 'y' directly in the copied folder 
+# This prevents Kleaf from throwing a savedefconfig error!
+sed -i '/default [yn]/d' common/drivers/kernelsu/Kconfig || true
+sed -i 's/^config .*/&\n\tdefault y/g' common/drivers/kernelsu/Kconfig || true
+
 echo "=== Integrating susfs4ksu ==="
 echo "Cloning shoey63/susfs4ksu..."
 git clone https://gitlab.com/shoey63/susfs4ksu.git -b gki-android14-6.1-dev susfs4ksu
