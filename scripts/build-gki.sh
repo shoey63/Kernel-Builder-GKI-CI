@@ -36,20 +36,38 @@ cd common
 cp ../susfs4ksu/kernel_patches/50_add_susfs_in_*.patch .
 patch -p1 < 50_add_susfs_in_*.patch || true
 
-if [ -f "fs/namespace.c.rej" ]; then
-    echo "Patch conflict detected in fs/namespace.c! Manually injecting susfs.h..."
-    if ! grep -q "#include <linux/susfs.h>" fs/namespace.c; then
-        sed -i '32i #include <linux/susfs.h>' fs/namespace.c
-    fi
-    rm -f fs/namespace.c.rej
+# --- User's Manual Hunk #1 Fix ---
+if ! grep -q 'susfs_def.h' fs/namespace.c; then
+  echo "Applying manual fs/namespace.c include fix..."
+  sed -i '/#include <linux\/mnt_idmapping.h>/a\
+#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\
+#include <linux/susfs_def.h>\
+#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\
+' fs/namespace.c
 fi
+
+if ! grep -q 'susfs_mnt_id_ida' fs/namespace.c; then
+  echo "Applying manual fs/namespace.c SUSFS mount declarations fix..."
+  sed -i '/#include "internal.h"/a\
+\
+#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\
+extern bool susfs_is_current_ksu_domain(void);\
+extern struct static_key_false susfs_set_sdcard_android_data_decrypted_key_false;\
+\
+#define CL_COPY_MNT_NS BIT(25) /* used by copy_mnt_ns() */\
+\
+static DEFINE_IDA(susfs_mnt_id_ida);\
+static DEFINE_IDA(susfs_mnt_group_ida);\
+\
+#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\
+' fs/namespace.c
+fi
+# Clean up the rejection file so the build area stays clean
+rm -f fs/namespace.c.rej
 cd ..
 
 echo "=== Configuring KSU & SUSFS for Kleaf ==="
-# 1. Strip any existing 'default y' or 'default n' lines from the KSU Kconfig
 sed -i '/default [yn]/d' KernelSU-Next/kernel/Kconfig || true
-
-# 2. Forcefully inject 'default y' immediately after every 'config' declaration
 sed -i 's/^config .*/&\n\tdefault y/g' KernelSU-Next/kernel/Kconfig || true
 
 echo "=== Building GKI via Kleaf (Bazel) ==="
