@@ -16,6 +16,7 @@ mkdir -p ../out
 [ -d common ] || die "common/ not found in kernel_workspace"
 
 KSU_NEXT_SETUP_URL="${KSU_NEXT_SETUP_URL:-https://raw.githubusercontent.com/pershoot/KernelSU-Next/dev-susfs/kernel/setup.sh}"
+KSU_NEXT_REPO_URL="${KSU_NEXT_REPO_URL:-https://github.com/pershoot/KernelSU-Next.git}"
 KSU_NEXT_REF="${KSU_NEXT_REF:-dev-susfs}"
 KSU_NEXT_HOOK_MODE="${KSU_NEXT_HOOK_MODE:-}"
 
@@ -47,7 +48,7 @@ else
 fi
 
 info "Forcing ${KSU_REPO} checkout to ${KSU_NEXT_REF}"
-git -C "$KSU_REPO" fetch origin "$KSU_NEXT_REF" --depth=1 >> ../out/ksu_next_setup.log 2>&1 || {
+git -C "$KSU_REPO" fetch "$KSU_NEXT_REPO_URL" "$KSU_NEXT_REF" --depth=1 >> ../out/ksu_next_setup.log 2>&1 || {
   cat ../out/ksu_next_setup.log
   die "Failed to fetch KernelSU-Next ref ${KSU_NEXT_REF}"
 }
