@@ -56,8 +56,8 @@ sed -i '/default [yn]/d' common/drivers/kernelsu/Kconfig || true
 sed -i 's/^config .*/&\n\tdefault y/g' common/drivers/kernelsu/Kconfig || true
 
 echo "=== Integrating susfs4ksu ==="
-# Pointing directly to your new, split-patch branch!
-git clone https://gitlab.com/shoey63/susfs4ksu.git -b android-14-patchfix susfs4ksu
+# Back to the stable branch!
+git clone https://gitlab.com/shoey63/susfs4ksu.git -b gki-android14-6.1-dev susfs4ksu
 
 cp -r susfs4ksu/kernel_patches/fs/* common/fs/
 cp -r susfs4ksu/kernel_patches/include/linux/* common/include/linux/
@@ -65,8 +65,48 @@ cp -r susfs4ksu/kernel_patches/include/linux/* common/include/linux/
 echo "Applying susfs kernel patches..."
 cd common
 cp ../susfs4ksu/kernel_patches/50_add_susfs_in_*.patch .
-# Removing the "|| true" so we can see if the split patch succeeds natively!
-patch -p1 < 50_add_susfs_in_*.patch
+patch -p1 < 50_add_susfs_in_*.patch || true
+
+# --- Unwrapped Manual Hunk Fixes (The ones that actually work!) ---
+if ! grep -q 'susfs_def.h' fs/namespace.c; then
+  echo "Applying manual fs/namespace.c include fix..."
+  sed -i '/#include <linux\/mnt_idmapping.h>/a\
+#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\n\
+#include <linux/susfs_def.h>\n\
+#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\
+' fs/namespace.c
+fi
+
+if ! grep -q 'DEFINE_IDA(susfs_mnt_id_ida)' fs/namespace.c; then
+  echo "Applying manual fs/namespace.c SUSFS mount declarations fix..."
+  sed -i '/#include "internal.h"/a\
+#ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\n\
+extern bool susfs_is_current_ksu_domain(void);\n\
+extern struct static_key_false susfs_set_sdcard_android_data_decrypted_key_false;\n\
+\n\
+#define CL_COPY_MNT_NS BIT(25) /* used by copy_mnt_ns() */\n\
+\n\
+static DEFINE_IDA(susfs_mnt_id_ida);\n\
+static DEFINE_IDA(susfs_mnt_group_ida);\n\
+#endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\
+' fs/namespace.c
+fi
+rm -f fs/namespace.c.rej
+
+# --- Dynamically injecting devpts fixes that patching rejected ---
+sed -i '/devpts_get_priv -- get private data for a slave/i \
+#ifdef CONFIG_KSU_SUSFS\n\
+extern int ksu_handle_devpts(struct inode*);\n\
+#endif\n' fs/devpts/inode.c
+
+sed -i '/if (dentry->d_sb->s_magic != DEVPTS_SUPER_MAGIC)/i \
+#ifdef CONFIG_KSU_SUSFS\n\
+\tif (likely(susfs_is_current_proc_umounted())) {\n\
+\t\tgoto orig_flow;\n\
+\t}\n\
+\tksu_handle_devpts(dentry->d_inode);\n\
+orig_flow:\n\
+#endif\n' fs/devpts/inode.c
 cd ..
 
 # --- UPSTREAM BUG FIX ---
@@ -77,11 +117,11 @@ echo "======================================================="
 echo "=== SUSFS / KSU INJECTION AUDIT (PRE-BUILD CHECK) ==="
 echo "======================================================="
 echo "--> 1. Verifying manual Hunk #1 injection in fs/namespace.c:"
-grep -A 5 -B 2 "static DEFINE_IDA(susfs_mnt_id_ida);" common/fs/namespace.c
+grep -A 5 -B 2 "static DEFINE_IDA(susfs_mnt_id_ida);" common/fs/namespace.c || echo "Not found"
 echo -e "\n--> 2. Verifying forced KSU configurations:"
-grep -A 2 "config KSU_SUSFS$" common/drivers/kernelsu/Kconfig
+grep -A 2 "config KSU_SUSFS$" common/drivers/kernelsu/Kconfig || echo "Not found"
 echo -e "\n--> 3. Checking uapi header injection:"
-ls -l common/drivers/kernelsu/uapi | head -n 3
+ls -l common/drivers/kernelsu/uapi | head -n 3 || echo "Not found"
 echo "======================================================="
 
 echo "=== Building GKI via Kleaf (Bazel) ==="
