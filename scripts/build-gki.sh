@@ -19,16 +19,10 @@ echo "Restoring the custom pixel9-susfs branch..."
 cd KernelSU-Next
 git checkout pixel9-susfs-gki-android14-6.1
 
-# --- THE VERSION FIX (DOCUMENTED METHOD) ---
+# --- THE VERSION FIX ---
 echo "Grabbing Git info for KSU manager..."
-cd KernelSU-Next
 KSU_TAG=$(git describe --abbrev=0 --tags 2>/dev/null || echo "v1.0.0")
 KSU_HASH=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
-cd ..
-
-echo "Injecting KSU tags into Kleaf build constants..."
-echo "export KSU_GIT_VERSION=$KSU_HASH" >> common/build.config.constants
-echo "export KSU_VERSION_TAG=$KSU_TAG" >> common/build.config.constants
 
 # --- HARD DEBUG TRAP ---
 CURRENT_BRANCH=$(git branch --show-current)
@@ -62,7 +56,8 @@ sed -i '/default [yn]/d' common/drivers/kernelsu/Kconfig || true
 sed -i 's/^config .*/&\n\tdefault y/g' common/drivers/kernelsu/Kconfig || true
 
 echo "=== Integrating susfs4ksu ==="
-git clone https://gitlab.com/shoey63/susfs4ksu.git -b gki-android14-6.1-dev susfs4ksu
+# Pointing directly to your new, split-patch branch!
+git clone https://gitlab.com/shoey63/susfs4ksu.git -b android-14-patchfix susfs4ksu
 
 cp -r susfs4ksu/kernel_patches/fs/* common/fs/
 cp -r susfs4ksu/kernel_patches/include/linux/* common/include/linux/
@@ -70,30 +65,8 @@ cp -r susfs4ksu/kernel_patches/include/linux/* common/include/linux/
 echo "Applying susfs kernel patches..."
 cd common
 cp ../susfs4ksu/kernel_patches/50_add_susfs_in_*.patch .
-patch -p1 < 50_add_susfs_in_*.patch || true
-
-# --- Unwrapped Manual Hunk #1 Fix ---
-if ! grep -q 'susfs_def.h' fs/namespace.c; then
-  echo "Applying manual fs/namespace.c include fix..."
-  sed -i '/#include <linux\/mnt_idmapping.h>/a\
-#include <linux/susfs_def.h>\
-' fs/namespace.c
-fi
-
-if ! grep -q 'DEFINE_IDA(susfs_mnt_id_ida)' fs/namespace.c; then
-  echo "Applying manual fs/namespace.c SUSFS mount declarations fix..."
-  sed -i '/#include "internal.h"/a\
-\
-extern bool susfs_is_current_ksu_domain(void);\
-extern struct static_key_false susfs_set_sdcard_android_data_decrypted_key_false;\
-\
-#define CL_COPY_MNT_NS BIT(25) /* used by copy_mnt_ns() */\
-\
-static DEFINE_IDA(susfs_mnt_id_ida);\
-static DEFINE_IDA(susfs_mnt_group_ida);\
-' fs/namespace.c
-fi
-rm -f fs/namespace.c.rej
+# Removing the "|| true" so we can see if the split patch succeeds natively!
+patch -p1 < 50_add_susfs_in_*.patch
 cd ..
 
 # --- UPSTREAM BUG FIX ---
@@ -117,4 +90,22 @@ tools/bazel run --color=no --curses=no //common:kernel_aarch64_dist -- --dist_di
 echo "=== Preparing Artifacts ==="
 mv "${DIST_DIR}/Image" ./Image
 
-echo "=== Build Complete ==="
+echo "=== Fetching Stock Boot Image ==="
+# !!! REPLACE THIS URL WITH YOUR SPECIFIC OTA LINK !!!
+python3 scripts/ota_pull.py \
+  --source "https://dl.google.com/dl/android/aosp/komodo-ota-cp1a.260405.005-62a6d5ce.zip" \
+  --partition boot \
+  --outdir ./stock_boot
+
+echo "=== Repacking Custom Boot Image ==="
+chmod +x tools/magiskboot
+chmod +x scripts/boot_swap.sh
+
+scripts/boot_swap.sh \
+  --boot ./stock_boot/boot-*.img \
+  --image ./Image \
+  --magiskboot tools/magiskboot \
+  --outdir ./ \
+  --outname "pixel9-susfs-patched-boot.img"
+
+echo "=== Assembly Complete ==="
