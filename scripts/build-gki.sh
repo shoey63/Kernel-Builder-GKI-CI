@@ -47,9 +47,12 @@ else
     echo "WARNING: Could not find uapi folder in KernelSU-Next!"
 fi
 
-echo "Injecting KSU Git versions to silence Kbuild warnings..."
-sed -i "1i KSU_GIT_VERSION := $KSU_HASH" common/drivers/kernelsu/Kbuild
-sed -i "1i KSU_VERSION_TAG := $KSU_TAG" common/drivers/kernelsu/Kbuild
+echo "=== Hijacking KernelSU-Next Fallback Variables ==="
+# Replace the default fallback assignments with our actual Git values!
+find common/drivers/kernelsu/ -type f \( -name "Makefile" -o -name "Kbuild" \) -exec sed -i "s/KSU_GIT_VERSION := 1/KSU_GIT_VERSION := $KSU_HASH/g" {} +
+find common/drivers/kernelsu/ -type f \( -name "Makefile" -o -name "Kbuild" \) -exec sed -i "s/version fallback: 1/version fallback: $KSU_HASH/g" {} +
+find common/drivers/kernelsu/ -type f \( -name "Makefile" -o -name "Kbuild" \) -exec sed -i "s/KSU_VERSION_TAG := v0.0.1/KSU_VERSION_TAG := $KSU_TAG/g" {} +
+find common/drivers/kernelsu/ -type f \( -name "Makefile" -o -name "Kbuild" \) -exec sed -i "s/tag fallback: v0.0.1/tag fallback: $KSU_TAG/g" {} +
 
 # Strip config constraints
 sed -i '/default [yn]/d' common/drivers/kernelsu/Kconfig || true
@@ -123,7 +126,6 @@ python -m pip install requests remotezip
 python -m pip install git+https://github.com/5ec1cff/payload-dumper
 
 echo "=== Fetching Stock Boot Image ==="
-# Using the venv python and the corrected relative path!
 python ../scripts/ota_pull.py \
   --source "https://dl.google.com/dl/android/aosp/komodo-ota-cp1a.260405.005-62a6d5ce.zip" \
   --partition boot \
@@ -137,10 +139,9 @@ chmod +x ../scripts/boot_swap.sh
   --boot ./stock_boot/boot-*.img \
   --image ./Image \
   --magiskboot ../tools/magiskboot \
-  --outdir ./ \
+  --outdir "${DIST_DIR}" \
   --outname "pixel9-susfs-patched-boot.img"
 
-# Exit the virtual environment cleanly
 deactivate
 
 echo "=== Assembly Complete ==="
