@@ -115,22 +115,32 @@ tools/bazel run --color=no --curses=no //common:kernel_aarch64_dist -- --dist_di
 echo "=== Preparing Artifacts ==="
 mv "${DIST_DIR}/Image" ./Image
 
+echo "=== Setting up Python VENV for OTA Extraction ==="
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install requests remotezip
+python -m pip install git+https://github.com/5ec1cff/payload-dumper
+
 echo "=== Fetching Stock Boot Image ==="
-# !!! REPLACE THIS URL WITH YOUR SPECIFIC OTA LINK !!!
-python3 scripts/ota_pull.py \
+# Using the venv python and the corrected relative path!
+python ../scripts/ota_pull.py \
   --source "https://dl.google.com/dl/android/aosp/komodo-ota-cp1a.260405.005-62a6d5ce.zip" \
   --partition boot \
   --outdir ./stock_boot
 
 echo "=== Repacking Custom Boot Image ==="
-chmod +x tools/magiskboot
-chmod +x scripts/boot_swap.sh
+chmod +x ../tools/magiskboot
+chmod +x ../scripts/boot_swap.sh
 
-scripts/boot_swap.sh \
+../scripts/boot_swap.sh \
   --boot ./stock_boot/boot-*.img \
   --image ./Image \
-  --magiskboot tools/magiskboot \
+  --magiskboot ../tools/magiskboot \
   --outdir ./ \
   --outname "pixel9-susfs-patched-boot.img"
+
+# Exit the virtual environment cleanly
+deactivate
 
 echo "=== Assembly Complete ==="
