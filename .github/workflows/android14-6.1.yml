@@ -2,12 +2,22 @@ name: Android 14 6.1 - Common Kernel + Repacked Boot
 
 on:
   workflow_dispatch:
+    inputs:
+      ota_url:
+        description: "Full OTA ZIP URL"
+        required: false
+        default: "https://dl.google.com/dl/android/aosp/komodo-ota-cp1a.260405.005-62a6d5ce.zip"
+        type: string
+      manifest_branch:
+        description: "Kernel manifest branch"
+        required: false
+        default: "common-android14-6.1-2026-03"
+        type: string
 
 env:
   MANIFEST_URL: https://android.googlesource.com/kernel/manifest
   MANIFEST_BRANCH: common-android14-6.1-2026-03
-  OTA_URL: https://dl.google.com/dl/android/aosp/komodo-ota-cp1a.260405.005-62a6d5ce.zip
-
+  OTA_URL: ${{ inputs.ota_url }}
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -82,8 +92,9 @@ jobs:
 
       - name: Integrate KernelSU-Next
         env:
-          KSU_NEXT_SETUP_URL: https://raw.githubusercontent.com/pershoot/KernelSU-Next/dev-susfs/kernel/setup.sh
-          KSU_NEXT_REF: dev-susfs
+          KSU_NEXT_SETUP_URL: https://raw.githubusercontent.com/shoey63/KernelSU-Next/pixel9-susfs-gki-android14-6.1/kernel/setup.sh
+          KSU_NEXT_REPO_URL: https://github.com/shoey63/KernelSU-Next.git
+          KSU_NEXT_REF: pixel9-susfs-gki-android14-6.1
           KSU_NEXT_HOOK_MODE: ""
         run: |
           set -euo pipefail
@@ -91,7 +102,7 @@ jobs:
 
       - name: Integrate SUSFS common-side
         env:
-          SUSFS_NEXT_URL: https://gitlab.com/pershoot/susfs4ksu.git
+          SUSFS_NEXT_URL: https://gitlab.com/shoey63/susfs4ksu.git
           SUSFS_NEXT_REF: gki-android14-6.1-dev
           SUSFS_NEXT_COMMIT: ""
         run: |
