@@ -6,9 +6,9 @@ cd kernel_workspace
 [ -d common ] || { echo "[-] common/ not found in kernel_workspace" >&2; exit 1; }
 
 # Variables (populated by GitHub Actions env block)
-KSU_NEXT_SETUP_URL="${KSU_NEXT_SETUP_URL:-https://raw.githubusercontent.com/shoey63/KernelSU-Next/pixel9-susfs-gki-android14-6.1/kernel/setup.sh}"
-KSU_NEXT_REPO_URL="${KSU_NEXT_REPO_URL:-https://github.com/shoey63/KernelSU-Next.git}"
-KSU_NEXT_REF="${KSU_NEXT_REF:-pixel9-susfs-gki-android14-6.1}"
+KSU_NEXT_SETUP_URL="${KSU_NEXT_SETUP_URL:-https://raw.githubusercontent.com/pershoot/KernelSU-Next/dev-susfs/kernel/setup.sh}"
+KSU_NEXT_REPO_URL="${KSU_NEXT_REPO_URL:-https://github.com/pershoot/KernelSU-Next.git}"
+KSU_NEXT_REF="${KSU_NEXT_REF:-dev-susfs}"
 KSU_NEXT_HOOK_MODE="${KSU_NEXT_HOOK_MODE:-}"
 
 echo ">>> Fetching and running KernelSU-Next setup script..."
