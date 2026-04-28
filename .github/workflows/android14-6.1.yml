@@ -1,7 +1,6 @@
 name: Android 14 6.1 - Common Kernel + Repacked Boot
 
 on:
-  push: 
   workflow_dispatch:
     inputs:
       ota_url:
@@ -17,9 +16,9 @@ on:
 
 env:
   MANIFEST_URL: https://android.googlesource.com/kernel/manifest
-  MANIFEST_BRANCH: ${{ inputs.manifest_branch }}
+  MANIFEST_BRANCH: common-android14-6.1-2026-03
   OTA_URL: ${{ inputs.ota_url }}
-
+  
 jobs:
   build:
     runs-on: ubuntu-latest
