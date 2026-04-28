@@ -1,6 +1,7 @@
 name: Android 14 6.1 - Common Kernel + Repacked Boot
 
 on:
+  push: 
   workflow_dispatch:
     inputs:
       ota_url:
