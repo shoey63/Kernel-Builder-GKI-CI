@@ -6,8 +6,8 @@ cd kernel_workspace
 [ -d common ] || { echo "[-] common/ not found in kernel_workspace" >&2; exit 1; }
 
 # Variables (Defaults pointing to your repos!)
-SUSFS_NEXT_URL="${SUSFS_NEXT_URL:-https://gitlab.com/shoey63/susfs4ksu.git}"
-SUSFS_NEXT_REF="${SUSFS_NEXT_REF:-gki-android14-6.1-dev}"
+SUSFS_NEXT_URL="${SUSFS_NEXT_URL:-https://gitlab.com/pershoot/susfs4ksu.git}"
+SUSFS_NEXT_REF="${SUSFS_NEXT_REF:-gki-android14-6.1-lts-dev}"
 
 echo ">>> Cloning susfs4ksu..."
 rm -rf susfs4ksu
