@@ -84,7 +84,7 @@ jobs:
           SUSFS_NEXT_URL: https://github.com/shoey63/susfs4ksu.git
           SUSFS_NEXT_REF: gki-android14-6.1
         run: |
-          bash ./scripts/android14-6.1-integrate_susfs.sh
+          bash ./scripts/android14-6.1-integrate_susfs_next.sh
           
       - name: Build common kernel Image
         run: |
