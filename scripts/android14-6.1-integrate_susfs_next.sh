@@ -25,14 +25,17 @@ if ! grep -q 'susfs_def.h' common/fs/namespace.c; then
 ' common/fs/namespace.c
 fi
 
-if ! grep -q 'susfs_is_sdcard_android_data_not_decrypted' common/fs/namespace.c; then
+if ! grep -q 'susfs_mnt_id_ida' common/fs/namespace.c; then
   sed -i '/#include "internal.h"/a\
 \
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\
 extern bool susfs_is_current_ksu_domain(void);\
-extern struct static_key_true susfs_is_sdcard_android_data_not_decrypted;\
+extern struct static_key_false susfs_set_sdcard_android_data_decrypted_key_false;\
 \
 #define CL_COPY_MNT_NS BIT(25) /* used by copy_mnt_ns() */\
+\
+static DEFINE_IDA(susfs_mnt_id_ida);\
+static DEFINE_IDA(susfs_mnt_group_ida);\
 \
 #endif // #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT\
 ' common/fs/namespace.c
