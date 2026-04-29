@@ -35,19 +35,7 @@ jobs:
         uses: actions/checkout@v4
         
       - name: Validate OTA URL (Fail-Fast)
-        run: |
-          echo ">>> Checking OTA URL..."
-          if [[ "${{ env.OTA_URL }}" == "*enter url"* ]]; then
-            echo "[-] Error: Dummy URL detected. You forgot to paste the link!"
-            exit 1
-          fi
-          
-          # Ping the URL headers to ensure it returns a 200 OK status
-          if ! curl --output /dev/null --silent --head --fail "${{ env.OTA_URL }}"; then
-            echo "[-] Error: OTA URL is dead or returned a 404. Aborting build."
-            exit 1
-          fi
-          echo "[+] OTA URL is valid and live!"
+        run: bash scripts/validate_ota.sh
 
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
