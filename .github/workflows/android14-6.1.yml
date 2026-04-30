@@ -12,7 +12,7 @@ on:
       ota_url:
         description: "Full OTA ZIP URL"
         required: true
-        default: "*Enter URL or run will fail!*"
+        default: "Enter URL or run will fail !"
         type: string
       manifest_branch:
         description: "Kernel manifest branch"
