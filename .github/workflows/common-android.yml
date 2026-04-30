@@ -1,11 +1,7 @@
 name: Build Android 14 GKI (6.1)
 
 on:
-  workflow_dispatch:
-  push:
-    paths:
-      - 'scripts/build-gki.sh'
-      - '.github/workflows/common-android.yml'
+  workflow_dispatch: 
 
 jobs:
   build:
