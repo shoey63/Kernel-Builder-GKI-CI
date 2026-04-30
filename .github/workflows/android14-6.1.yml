@@ -7,12 +7,12 @@ on:
       build_name:
         description: "Device & Build ID (e.g., komodo-cp1a)"
         required: true
-        default: "Pixel GKI android14-6.1"
+        default: "Pixel KSU/Susfs android14-6.1"
         type: string
       ota_url:
         description: "Full OTA ZIP URL"
         required: true
-        default: "*enter url or run will fail*"
+        default: "*Enter URL or run will fail!*"
         type: string
       manifest_branch:
         description: "Kernel manifest branch"
