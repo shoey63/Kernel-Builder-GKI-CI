@@ -58,11 +58,6 @@ jobs:
           docker-images: false
           swap-storage: false
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get install -y git curl unzip zip bc bison flex libssl-dev python3 file xz-utils cpio
-          chmod +x ./tools/magiskboot || true
-
       - name: Setup repo tool
         run: |
           mkdir -p "$HOME/bin"
