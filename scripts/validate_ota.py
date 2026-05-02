@@ -39,7 +39,7 @@ def main():
 
     except Exception:
         # 5. Network errors, 404s, or server doesn't allow HTTP Range requests
-        print("Bad address or not allowed - proceeding with Image generation only")
+        print("Bad address or unsupported - proceeding with Image generation only")
         set_repack_enabled(False)
 
 if __name__ == "__main__":
