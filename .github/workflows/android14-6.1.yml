@@ -30,7 +30,6 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
 
     steps:
       - name: Checkout repo
@@ -42,14 +41,11 @@ jobs:
           python3 -m venv .venv
           source .venv/bin/activate
           pip install -q requests remotezip
-          echo ""
           echo "========================================"
           echo "        OTA VALIDATION RESULT           "
           echo "========================================"
           python3 scripts/validate_ota.py
           echo "========================================"
-          echo ""
-
 
       - name: Free Disk Space (Ubuntu)
         uses: jlumbroso/free-disk-space@main
@@ -86,11 +82,8 @@ jobs:
 
       - name: Integrate KernelSU-Next
         env:
-          # Pulling the raw setup script directly from Pershoot's dev-susfs branch
           KSU_NEXT_SETUP_URL: https://raw.githubusercontent.com/pershoot/KernelSU-Next/dev-susfs/kernel/setup.sh
-          # Cloning Pershoot's live repo
           KSU_NEXT_REPO_URL: https://github.com/pershoot/KernelSU-Next.git
-          # Tracking his bleeding-edge branch
           KSU_NEXT_REF: dev-susfs
           KSU_NEXT_HOOK_MODE: ""
         run: |
@@ -98,9 +91,7 @@ jobs:
 
       - name: Integrate SUSFS common-side
         env:
-          # Pulling directly from his live GitLab repo
           SUSFS_NEXT_URL: https://gitlab.com/pershoot/susfs4ksu.git
-          # Tracking his specific LTS dev branch
           SUSFS_NEXT_REF: gki-android14-6.1-lts-dev
         run: |
           bash ./scripts/android14-6.1-integrate_susfs_next.sh
@@ -111,6 +102,7 @@ jobs:
           bash ./scripts/android14-6.1-build_kernel.sh
 
       - name: Pull stock boot.img from OTA
+        if: env.REPACK_ENABLED == 'true'
         run: |
           python3 -m venv .venv
           source .venv/bin/activate
@@ -124,6 +116,7 @@ jobs:
           find work/stock -maxdepth 1 -type f \( -name 'boot.img' -o -name 'boot-*.img' \) -ls
 
       - name: Repack boot image with built Image
+        if: env.REPACK_ENABLED == 'true'
         run: |
           mkdir -p out/final
           mkdir -p work/repack-tmp
