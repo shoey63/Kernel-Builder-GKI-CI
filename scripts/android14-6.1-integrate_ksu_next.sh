@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
+git config --global advice.detachedHead false
 
 cd kernel_workspace
 
