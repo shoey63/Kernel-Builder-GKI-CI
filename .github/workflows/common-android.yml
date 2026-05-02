@@ -126,7 +126,6 @@ jobs:
 
           STOCK_NAME="$(basename "$BOOT_IMG" .img)"
           cp -f "$BOOT_IMG" "out/final/${STOCK_NAME}-stock.img"
-
           bash ./scripts/boot_swap.sh \
             --boot "$BOOT_IMG" \
             --image "out/Image" \
@@ -139,8 +138,7 @@ jobs:
         run: |
           mkdir -p out/final
           echo -e "MANIFEST_URL=${MANIFEST_URL}\nMANIFEST_BRANCH=${MANIFEST_BRANCH}\nOTA_URL=${OTA_URL}\nTIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S UTC')" > out/final/repack_metadata.txt
-          cp -f out/build_common_kernel.log out/final/ || true
-          cp -f out/image_strings.txt out/final/strings.txt || true
+      
           if [ "$REPACK_ENABLED" != "true" ]; then
             echo ">>> Image-only mode: Copying raw kernel Image to artifacts"
             cp -f out/Image out/final/ || true
