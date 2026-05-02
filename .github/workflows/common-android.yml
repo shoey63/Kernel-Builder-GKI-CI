@@ -19,7 +19,7 @@ on:
       manifest_branch:
         description: "Kernel manifest branch"
         required: true
-        default: "common-android-lts"
+        default: "common-android14-6.1-lts"
         type: string
 
 env:
