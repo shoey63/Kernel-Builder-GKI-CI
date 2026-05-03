@@ -76,20 +76,19 @@ jobs:
 
       - name: Integrate KernelSU-Next
         env:
-          KSU_NEXT_SETUP_URL: https://raw.githubusercontent.com/pershoot/KernelSU-Next/dev-susfs/kernel/setup.sh
-          KSU_NEXT_REPO_URL: https://github.com/pershoot/KernelSU-Next.git
-          KSU_NEXT_REF: dev-susfs
+          KSU_NEXT_SETUP_URL: https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/v3.20/kernel/setup.sh # <-- Updated
+          KSU_NEXT_REPO_URL: https://github.com/KernelSU-Next/KernelSU-Next.git # <-- Updated
+          KSU_NEXT_REF: v3.20 # <-- Updated (Tag 3.20)
           KSU_NEXT_HOOK_MODE: ""
         run: |
           bash ./scripts/integrate_ksu_next.sh
 
       - name: Integrate SUSFS common-side
         env:
-          SUSFS_NEXT_URL: https://gitlab.com/pershoot/susfs4ksu.git
-          SUSFS_NEXT_REF: gki-android14-6.1-lts-dev
+          SUSFS_NEXT_URL: https://gitlab.com/simonpunk/susfs4ksu.git # <-- Updated
+          SUSFS_NEXT_REF: gki-android15-6.6 # <-- Updated
         run: |
           bash ./scripts/integrate_susfs_next.sh
-
           
       - name: Build common kernel Image
         run: |
@@ -144,7 +143,6 @@ jobs:
       - name: Upload repacked boot artifact
         uses: actions/upload-artifact@v4
         with:
-          name: common-android14-6.1-repacked-boot
+          name: common-android15-6.6-repacked-boot
           path: out/final/
           if-no-files-found: error
-
