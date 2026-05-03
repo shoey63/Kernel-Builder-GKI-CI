@@ -24,8 +24,8 @@ CURRENT_DATE=$(date -u +"%a %b %d %H:%M:%S UTC %Y")
 # Replace the default timestamp logic in the 6.1+ Makefile
 sed -i "s/build-timestamp = \$(or \$(KBUILD_BUILD_TIMESTAMP), \$(build-timestamp-auto))/build-timestamp = \"$CURRENT_DATE\"/g" common/init/Makefile
 
-echo ">>> Compiling pure common Android 14 6.1 arm64 kernel..."
-tools/bazel run --config=local //common:kernel_aarch64_dist -- --destdir=out/dist
+echo ">>> Compiling common Android arm64 kernel..."
+tools/bazel run --config=local --config=stamp //common:kernel_aarch64_dist -- --destdir=out/dist
 
 IMAGE_PATH="$(find out/dist -type f -name 'Image' | head -n1)"
 
