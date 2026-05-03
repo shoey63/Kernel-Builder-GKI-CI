@@ -8,12 +8,6 @@ cd kernel_workspace
 echo ">>> Cloning susfs4ksu..."
 git clone --depth=1 -b "${SUSFS_NEXT_REF}" "${SUSFS_NEXT_URL}" susfs4ksu
 
-echo ">>> Applying SUSFS patch to KernelSU-Next..."
-KSU_PATCH_SRC="$(find susfs4ksu/kernel_patches/KernelSU -maxdepth 1 -type f -name '10_enable_susfs_for_ksu.patch' | head -n1)"
-[ -n "${KSU_PATCH_SRC}" ] || { echo "[-] Could not find 10_enable_susfs_for_ksu.patch" >&2; exit 1; }
-cp -f "${KSU_PATCH_SRC}" KernelSU-Next/
-(cd KernelSU-Next && patch -p1 < "$(basename "${KSU_PATCH_SRC}")") || { echo "[-] KernelSU patch failed" >&2; exit 1; }
-
 COMMON_PATCH_SRC="$(find susfs4ksu/kernel_patches -maxdepth 1 -type f -name '50_add_susfs_in_*.patch' | head -n1)"
 [ -n "${COMMON_PATCH_SRC}" ] || { echo "[-] Could not find 50_add_susfs_in_*.patch" >&2; exit 1; }
 
