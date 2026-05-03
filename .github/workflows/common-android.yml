@@ -83,13 +83,26 @@ jobs:
         run: |
           bash ./scripts/integrate_ksu_next.sh
 
+      - name: Determine SUSFS Branch
+        run: |
+          if [[ "${{ inputs.manifest_branch }}" == *"android14-6.1"* ]]; then
+            echo "SUSFS_NEXT_REF=gki-android14-6.1-dev" >> $GITHUB_ENV
+            echo ">>> Routing to SUSFS: gki-android14-6.1-dev"
+          elif [[ "${{ inputs.manifest_branch }}" == *"android15-6.6"* ]]; then
+            echo "SUSFS_NEXT_REF=gki-android15-6.6-dev" >> $GITHUB_ENV
+            echo ">>> Routing to SUSFS: gki-android15-6.6-dev"
+          else
+            echo ">>> Unrecognized branch, defaulting to 14-6.1..."
+            echo "SUSFS_NEXT_REF=gki-android14-6.1-dev" >> $GITHUB_ENV
+          fi
+          
       - name: Integrate SUSFS common-side
         env:
-          SUSFS_NEXT_URL: https://gitlab.com/simonpunk/susfs4ksu.git # <-- Updated
-          SUSFS_NEXT_REF: gki-android14-6.1-dev # <-- Updated
+          SUSFS_NEXT_URL: https://gitlab.com/simonpunk/susfs4ksu.git
+          # SUSFS_NEXT_REF is now inherited dynamically from the previous step
         run: |
           bash ./scripts/integrate_susfs_next.sh
-          
+
       - name: Build common kernel Image
         run: |
           bash ./scripts/build_kernel.sh
