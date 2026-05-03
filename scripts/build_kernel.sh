@@ -14,6 +14,9 @@ for f in common/android/abi_gki_protected_exports*; do
   fi
 done
 
+echo ">>> Removing '-dirty' flag from kernel release string..."
+sed -i "s/printf '%s' -dirty/printf '%s' ''/g" common/scripts/setlocalversion
+
 echo ">>> Compiling pure common Android 14 6.1 arm64 kernel..."
 tools/bazel run --config=local //common:kernel_aarch64_dist -- --destdir=out/dist
 
