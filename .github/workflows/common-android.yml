@@ -58,12 +58,6 @@ jobs:
           docker-images: false
           swap-storage: false
 
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y git curl unzip zip bc bison flex libssl-dev python3 file xz-utils cpio
-          chmod +x ./tools/magiskboot || true
-
       - name: Setup repo tool
         run: |
           mkdir -p "$HOME/bin"
@@ -87,19 +81,19 @@ jobs:
           KSU_NEXT_REF: dev-susfs
           KSU_NEXT_HOOK_MODE: ""
         run: |
-          bash ./scripts/android14-6.1-integrate_ksu_next.sh
+          bash ./scripts/integrate_ksu_next.sh
 
       - name: Integrate SUSFS common-side
         env:
           SUSFS_NEXT_URL: https://github.com/shoey63/susfs4ksu.git
           SUSFS_NEXT_REF: gki-android14-6.1-lts-dev
         run: |
-          bash ./scripts/android14-6.1-integrate_susfs_next.sh
+          bash ./scripts/integrate_susfs_next.sh
 
           
       - name: Build common kernel Image
         run: |
-          bash ./scripts/android14-6.1-build_kernel.sh
+          bash ./scripts/build_kernel.sh
 
       - name: Pull stock boot.img from OTA
         if: env.REPACK_ENABLED == 'true'
@@ -120,6 +114,7 @@ jobs:
         run: |
           mkdir -p out/final
           mkdir -p work/repack-tmp
+          chmod +x ./tools/magiskboot || true
 
           BOOT_IMG="$(find work/stock -maxdepth 1 -type f \( -name 'boot.img' -o -name 'boot-*.img' \) | head -n 1)"
           [ -n "$BOOT_IMG" ] || { echo "[-] Could not find stock boot image"; exit 1; }
@@ -138,7 +133,6 @@ jobs:
         run: |
           mkdir -p out/final
           echo -e "MANIFEST_URL=${MANIFEST_URL}\nMANIFEST_BRANCH=${MANIFEST_BRANCH}\nOTA_URL=${OTA_URL}\nTIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S UTC')" > out/final/repack_metadata.txt
-      
           if [ "$REPACK_ENABLED" != "true" ]; then
             echo ">>> Image-only mode: Copying raw kernel Image to artifacts"
             cp -f out/Image out/final/ || true
