@@ -76,9 +76,9 @@ jobs:
 
       - name: Integrate KernelSU-Next
         env:
-          KSU_NEXT_SETUP_URL: https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/v3.20/kernel/setup.sh # <-- Updated
+          KSU_NEXT_SETUP_URL: https://raw.githubusercontent.com/KernelSU-Next/KernelSU-Next/dev/kernel/setup.sh # <-- Updated
           KSU_NEXT_REPO_URL: https://github.com/KernelSU-Next/KernelSU-Next.git # <-- Updated
-          KSU_NEXT_REF: v3.20 # <-- Updated (Tag 3.20)
+          KSU_NEXT_REF: dev # <-- Updated (Tag 3.20)
           KSU_NEXT_HOOK_MODE: ""
         run: |
           bash ./scripts/integrate_ksu_next.sh
