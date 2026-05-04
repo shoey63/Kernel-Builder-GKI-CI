@@ -53,10 +53,14 @@ if [ "$APPLY_RC" -ne 0 ]; then
     echo ">>> Expected failure caught and safely ignored. Cleaning up..."
     rm -f common/fs/namespace.c.rej
   else
-    echo "[-] CRITICAL: Unexpected patch failures occurred!" >&2
-    for f in "${REJ_FILES[@]}"; do echo "  - $f" >&2; done
-    exit 1
+    echo "[-] CRITICAL: Unexpected patch failures occurred! Dumping .rej contents for analysis:" >&2
+    for f in "${REJ_FILES[@]}"; do 
+      echo "=== $f ===" >&2
+      cat "$f" >&2
+    done
+    exit 1 # Let it fail so you can grab the logs and write your sed fixes
   fi
 fi
+
 
 echo ">>> SUSFS common-side integration complete!"

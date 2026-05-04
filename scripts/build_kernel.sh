@@ -14,8 +14,17 @@ for f in common/android/abi_gki_protected_exports*; do
   fi
 done
 
-echo ">>> Compiling pure common Android 14 6.1 arm64 kernel..."
-tools/bazel run --config=local //common:kernel_aarch64_dist -- --destdir=out/dist
+echo ">>> Satisfying Kleaf's git status checks to remove -dirty and fix timestamp..."
+cd common
+
+git config --global user.name "github-actions[bot]"
+git config --global user.email "github-actions[bot]@users.noreply.github.com"
+git add .
+git commit -m "ci: inject KSU and SusFS patches" || true
+cd ..
+
+echo ">>> Compiling common Android arm64 kernel..."
+tools/bazel run --config=local --config=stamp //common:kernel_aarch64_dist -- --destdir=out/dist
 
 IMAGE_PATH="$(find out/dist -type f -name 'Image' | head -n1)"
 
@@ -26,5 +35,8 @@ fi
 
 echo ">>> Selected Image: ${IMAGE_PATH}"
 cp -f "${IMAGE_PATH}" ../out/Image
+
+echo ">>> Extracting compiled kernel version string..."
+strings ../out/Image | grep "Linux version" | head -n 1
 
 echo ">>> Build complete!"
