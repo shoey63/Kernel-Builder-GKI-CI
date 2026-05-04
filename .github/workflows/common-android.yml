@@ -1,13 +1,13 @@
 name: Android GKI - KSU/Susfs
-run-name: "Build KSU/Susfs: ${{ inputs.build_name }} [${{ github.ref_name }}]"
+run-name: "Build GKI KSU/Susfs: ${{ inputs.build_name }} [${{ github.ref_name }}]"
 
 on:
   workflow_dispatch:
     inputs:
       build_name:
         description: "Device & Build ID (e.g., komodo-cp1a)"
-        required: true
-        default: "komodo-cp1a"
+        required: false
+        default: "gki-susfs"
         type: string
       
       ota_url:
@@ -17,10 +17,16 @@ on:
         type: string
 
       manifest_branch:
-        description: "Kernel manifest branch"
-        required: true
+        description: "Kernel manifest branch (recommend use default for pixel 6 to 9 series)"
+        required: false
         default: "common-android14-6.1-lts"
         type: string
+
+      susfs_branch:
+        description: "SUSFS Branch (use default for pixel 6 to 9 series)"
+        required: false
+        default: "gki-android14-6.1-dev"
+        type: string        
 
 env:
   MANIFEST_URL: https://android.googlesource.com/kernel/manifest
@@ -76,21 +82,20 @@ jobs:
 
       - name: Integrate KernelSU-Next
         env:
-          KSU_NEXT_SETUP_URL: https://raw.githubusercontent.com/shoey63/KernelSU-Next2/dev-susfs/kernel/setup.sh
-          KSU_NEXT_REPO_URL: https://github.com/shoey63/KernelSU-Next.git
+          KSU_NEXT_SETUP_URL: https://raw.githubusercontent.com/pershoot/KernelSU-Next/dev/kernel/setup.sh
+          KSU_NEXT_REPO_URL: https://github.com/pershoot/KernelSU-Next.git
           KSU_NEXT_REF: dev-susfs
           KSU_NEXT_HOOK_MODE: ""
         run: |
-          bash ./scripts/integrate_ksu_next.sh
-
+          bash ./scripts/integrate_ksu_next.sh  
+         
       - name: Integrate SUSFS common-side
         env:
-          SUSFS_NEXT_URL: https://github.com/shoey63/susfs4ksu.git
-          SUSFS_NEXT_REF: gki-android14-6.1-lts-dev
+          SUSFS_NEXT_URL: https://gitlab.com/simonpunk/susfs4ksu.git
+          SUSFS_NEXT_REF: ${{ inputs.susfs_branch }}
         run: |
           bash ./scripts/integrate_susfs_next.sh
 
-          
       - name: Build common kernel Image
         run: |
           bash ./scripts/build_kernel.sh
@@ -144,7 +149,6 @@ jobs:
       - name: Upload repacked boot artifact
         uses: actions/upload-artifact@v4
         with:
-          name: common-android14-6.1-repacked-boot
+          name: ${{ inputs.build_name }}-repacked-boot
           path: out/final/
           if-no-files-found: error
-
