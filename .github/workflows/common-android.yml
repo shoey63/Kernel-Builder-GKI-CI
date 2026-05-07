@@ -17,13 +17,13 @@ on:
         type: string
 
       manifest_branch:
-        description: "Kernel manifest branch (recommend use default for pixel 6 to 9 series)"
+        description: "Kernel manifest branch (recommend default for pixel 6 to 9 and common-android15-6.6-lts for pixel 10 series)"
         required: false
         default: "common-android14-6.1-lts"
         type: string
 
       susfs_branch:
-        description: "SUSFS Branch (use default for pixel 6 to 9 series)"
+        description: "SUSFS Branch (use default for pixel 6 to 9 and gki-android15-6.6-dev for pixel 10 series)"
         required: false
         default: "gki-android14-6.1-dev"
         type: string        
