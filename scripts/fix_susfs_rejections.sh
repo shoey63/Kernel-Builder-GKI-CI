@@ -3,10 +3,15 @@ set -euo pipefail
 
 echo ">>> Starting SUSFS patch fixup routine..."
 
+# Step into the kernel workspace where 'common' actually lives
+cd kernel_workspace
+
 # 1. Fix fs/exec.c
 if [ -f "common/fs/exec.c.rej" ]; then
   echo ">>> Found exec.c.rej. Applying manual fix..."
-  sed -i '/#include <linux\/uaccess.h>/i\
+  
+  # Using the universal fs.h anchor for maximum compatibility
+  sed -i '/#include <linux\/fs.h>/a\
 #ifdef CONFIG_KSU_SUSFS\
 #include <linux/susfs_def.h>\
 #endif\
@@ -18,9 +23,10 @@ if [ -f "common/fs/exec.c.rej" ]; then
     rm "common/fs/exec.c.rej"
   else
     echo "  [-] WARNING: exec.c fix failed to inject! The anchor line may have changed." >&2
-    # We purposefully do NOT delete the .rej file here so the Final Validation catches it.
   fi
 fi
+
+
 
 # 2. Fix fs/namespace.c
 if [ -f "common/fs/namespace.c.rej" ]; then
