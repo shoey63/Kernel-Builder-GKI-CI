@@ -10,8 +10,8 @@ cd kernel_workspace
 if [ -f "common/fs/exec.c.rej" ]; then
   echo ">>> Found exec.c.rej. Applying manual fix..."
   
-  # Using the universal fs.h anchor for maximum compatibility
-  sed -i '/#include <linux\/fs.h>/a\
+  # Using uaccess.h as the anchor, inserting before it
+  sed -i '/#include <linux\/uaccess.h>/i\
 #ifdef CONFIG_KSU_SUSFS\
 #include <linux/susfs_def.h>\
 #endif\
@@ -25,8 +25,6 @@ if [ -f "common/fs/exec.c.rej" ]; then
     echo "  [-] WARNING: exec.c fix failed to inject! The anchor line may have changed." >&2
   fi
 fi
-
-
 
 # 2. Fix fs/namespace.c
 if [ -f "common/fs/namespace.c.rej" ]; then
