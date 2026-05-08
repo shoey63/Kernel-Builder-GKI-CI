@@ -26,7 +26,28 @@ if [ -f "common/fs/exec.c.rej" ]; then
   fi
 fi
 
-# 2. Fix fs/namespace.c
+# 2. Fix fs/proc/base.c
+if [ -f "common/fs/proc/base.c.rej" ]; then
+  echo ">>> Found base.c.rej. Applying manual fix..."
+  
+  # Using "internal.h" as the anchor since it's present in the .rej context
+  sed -i '/#include "internal.h"/i\
+#if defined(CONFIG_KSU_SUSFS_SUS_MAP) || defined(CONFIG_KSU_SUSFS_OPEN_REDIRECT)\
+#include <linux/susfs_def.h>\
+#endif\
+' common/fs/proc/base.c
+
+  # Sanity Check
+  if grep -q 'susfs_def.h' common/fs/proc/base.c; then
+    echo "  -> base.c fix verified!"
+    rm "common/fs/proc/base.c.rej"
+  else
+    echo "  [-] WARNING: base.c fix failed to inject! The anchor line may have changed." >&2
+  fi
+fi
+
+
+# 3. Fix fs/namespace.c
 if [ -f "common/fs/namespace.c.rej" ]; then
   echo ">>> Found namespace.c.rej. Applying manual fix..."
   
