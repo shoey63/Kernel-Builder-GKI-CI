@@ -17,10 +17,17 @@ done
 echo ">>> Satisfying Kleaf's git status checks to remove -dirty and fix timestamp..."
 cd common
 
+# Configure local git identity for this runner session
 git config --global user.name "github-actions[bot]"
 git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+# Stage all changes (KSU, SUSFS, and any user-defined custom patches)
 git add .
-git commit -m "ci: inject KSU and SusFS patches" || true
+
+# Create a 'wash' commit to ensure a clean KMI string without the -dirty suffix
+# '|| true' ensures the build continues even if no changes were made
+git commit -m "ci: integrated KSU, SUSFS, and custom developer patches" || true
+
 cd ..
 
 echo ">>> Compiling common Android arm64 kernel..."
