@@ -1,5 +1,5 @@
-name: Android GKI - KSU/Susfs
-run-name: "Build GKI KSU/Susfs: ${{ inputs.build_name }} [${{ github.ref_name }}]"
+name: Android GKI - KSU/Susfs (Customized)
+run-name: "Build GKI KSU/Susfs/Custom: ${{ inputs.build_name }} [${{ github.ref_name }}]"
 
 on:
   workflow_dispatch:
@@ -7,7 +7,7 @@ on:
       build_name:
         description: "Device & Build ID (e.g., komodo-cp1a)"
         required: false
-        default: "gki-susfs"
+        default: "gki-custom"
         type: string
       
       ota_url:
@@ -17,17 +17,17 @@ on:
         type: string
 
       manifest_branch:
-        description: "Kernel manifest branch (recommend default for pixel 6 to 9 and common-android15-6.6-lts for pixel 10 series)"
+        description: "Kernel manifest branch (Use default for P6-P9; use common-android15-6.6-2025-10 for P10 series)"
         required: false
-        default: "common-android14-6.1-lts"
+        default: "common-android14-6.1-2025-09"
         type: string
 
       susfs_branch:
-        description: "SUSFS Branch (use default for pixel 6 to 9 and gki-android15-6.6-dev for pixel 10 series)"
+        description: "SUSFS Branch (Use default for P6-P9; use gki-android15-6.6-dev for P10 series)"
         required: false
         default: "gki-android14-6.1-dev"
-        type: string        
-
+        type: string
+        
 env:
   MANIFEST_URL: https://android.googlesource.com/kernel/manifest
   MANIFEST_BRANCH: ${{ inputs.manifest_branch }}
@@ -100,6 +100,18 @@ jobs:
         run: |
           bash ./scripts/fix_susfs_rejections.sh
 
+      - name: Run Custom Patches
+        run: |
+          # Check if file exists and has content beyond just a shebang
+          if [ -s "scripts/custom_patches.sh" ] && [ $(grep -c "[^[:space:]]" scripts/custom_patches.sh) -gt 1 ]; then
+            echo ">>> Custom patch script detected. Applying modifications..."
+            chmod +x scripts/custom_patches.sh
+            ./scripts/custom_patches.sh
+          else
+            echo ">>> No custom patches to apply. Proceeding with stock/KSU build."
+          fi
+        shell: bash
+          
       - name: Build common kernel Image
         run: |
           bash ./scripts/build_kernel.sh
