@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-set -e
+# set -e
 
 # ---------------------------------------------------------
 # CUSTOM PATCHES & CHERRY-PICKS
@@ -14,4 +14,4 @@ set -e
 # git cherry-pick <hash>
 # cd ../..
 
-echo ">>> User modifications complete."
+# echo ">>> User modifications complete."
