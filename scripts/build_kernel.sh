@@ -17,21 +17,26 @@ done
 echo ">>> Satisfying Kleaf's git status checks to remove -dirty and fix timestamp..."
 cd common
 
-# Configure local git identity for this runner session
+# Configure local git identity
 git config --global user.name "github-actions[bot]"
 git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-# Stage all changes (KSU, SUSFS, and any user-defined custom patches)
+# Stage all changes
 git add .
 
-# Create a 'wash' commit to ensure a clean KMI string without the -dirty suffix
-# '|| true' ensures the build continues even if no changes were made
-git commit -m "ci: integrated KSU, SUSFS, and custom developer patches" || true
+# Create a commit for custom changes
+git commit -m "ci: integrated KSU, SUSFS, and other patches if any" || true
 
 cd ..
 
 echo ">>> Compiling common Android arm64 kernel..."
-tools/bazel run --config=local --config=stamp //common:kernel_aarch64_dist -- --destdir=out/dist
+
+# Inject the official Google hash
+echo ">>> Spoofing version string with official hash: g$OFFICIAL_HASH"
+
+tools/bazel run --config=local --config=stamp \
+  --action_env=STABLE_BUILD_VERSION="g$OFFICIAL_HASH" \
+  //common:kernel_aarch64_dist -- --destdir=out/dist
 
 IMAGE_PATH="$(find out/dist -type f -name 'Image' | head -n1)"
 
