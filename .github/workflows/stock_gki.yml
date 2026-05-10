@@ -79,6 +79,10 @@ jobs:
           echo "OFFICIAL_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
           echo ">>> Captured Official Google Hash: $(git rev-parse --short HEAD)"
 
+      - name: Neutralize ABI Protection
+        run: find kernel_workspace/common -name "android_abi_gki_aarch64*" -exec truncate -s 0 {} +
+        
+
       - name: Build Pure GKI (Direct)
         run: |
           cd kernel_workspace
@@ -123,7 +127,6 @@ jobs:
           STOCK_NAME="$(basename "$BOOT_IMG" .img)"
           cp -f "$BOOT_IMG" "out/final/${STOCK_NAME}-stock.img"
           
-          # Fixed path to point to out/dist/Image
           bash ./scripts/boot_swap.sh \
             --boot "$BOOT_IMG" \
             --image "out/dist/Image" \
@@ -135,19 +138,19 @@ jobs:
       - name: Prepare Final Artifacts
         run: |
           mkdir -p out/final
-          echo -e "TYPE=STOCK_GKI\nBRANCH=${MANIFEST_BRANCH}\nHASH=g${OFFICIAL_HASH}\nTIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S UTC')" > out/final/build_metadata.txt
-          
-          # Ensure Image is copied whether or not repack was enabled
-          if [ -f "out/dist/Image" ]; then
-            cp -f out/dist/Image out/final/
+          echo -e "TYPE=STOCK_GKI\nHASH=g${OFFICIAL_HASH}\nTIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S UTC')" > out/final/build_metadata.txt
+      
+          if [ "$REPACK_ENABLED" != "true" ]; then
+            echo ">>> Image-only mode: Copying raw kernel Image to artifacts"
+            cp -f out/Image out/final/ || true
           fi
           
           echo ">>> Final Artifact Directory:"
           ls -lah out/final/
 
-      - name: Upload artifacts
+      - name: Upload repacked boot artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.build_name }}
+          name: ${{ inputs.build_name }}-repacked-boot
           path: out/final/
           if-no-files-found: error
