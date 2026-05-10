@@ -79,19 +79,22 @@ jobs:
           echo "OFFICIAL_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
           echo ">>> Captured Official Google Hash: $(git rev-parse --short HEAD)"
 
-          
       - name: Build Pure GKI (Direct)
         run: |
           cd kernel_workspace
-          # Capture pure metadata
+          # Capture official commit timestamp for SOURCE_DATE_EPOCH
           OFFICIAL_DATE=$(git -C common log -1 --format=%ct)
     
-          # Execute build with "Ghost" metadata injection
+          # Inject official metadata in build
           tools/bazel run --config=local --config=stamp \
             --action_env=SOURCE_DATE_EPOCH=$OFFICIAL_DATE \
             --action_env=STABLE_BUILD_VERSION="g$OFFICIAL_HASH" \
             //common:kernel_aarch64_dist -- --destdir=../out/dist
 
+      - name: Verify Kernel Version
+        run: |
+          echo ">>> Extracting compiled kernel version string..."
+          strings out/dist/Image | grep "Linux version" | head -n 1
 
       - name: Pull stock boot.img from OTA
         if: env.REPACK_ENABLED == 'true'
@@ -119,9 +122,11 @@ jobs:
 
           STOCK_NAME="$(basename "$BOOT_IMG" .img)"
           cp -f "$BOOT_IMG" "out/final/${STOCK_NAME}-stock.img"
+          
+          # Fixed path to point to out/dist/Image
           bash ./scripts/boot_swap.sh \
             --boot "$BOOT_IMG" \
-            --image "out/Image" \
+            --image "out/dist/Image" \
             --magiskboot "./tools/magiskboot" \
             --outdir "out/final" \
             --outname "${STOCK_NAME}-repacked.img" \
@@ -130,21 +135,19 @@ jobs:
       - name: Prepare Final Artifacts
         run: |
           mkdir -p out/final
-          echo -e "TYPE=STOCK_GKI\nBRANCH=${MANIFEST_BRANCH}\nTIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S UTC')" > out/final/build_metadata.txt
+          echo -e "TYPE=STOCK_GKI\nBRANCH=${MANIFEST_BRANCH}\nHASH=g${OFFICIAL_HASH}\nTIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S UTC')" > out/final/build_metadata.txt
           
-          # Logic to find the Image whether it's in out/ or out/dist/
+          # Ensure Image is copied whether or not repack was enabled
           if [ -f "out/dist/Image" ]; then
             cp -f out/dist/Image out/final/
-          elif [ -f "out/Image" ]; then
-            cp -f out/Image out/final/
           fi
           
           echo ">>> Final Artifact Directory:"
           ls -lah out/final/
 
-      - name: Upload repacked boot artifact
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ inputs.build_name }}-repacked-boot
+          name: ${{ inputs.build_name }}
           path: out/final/
           if-no-files-found: error
