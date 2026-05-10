@@ -142,7 +142,7 @@ jobs:
       
           if [ "$REPACK_ENABLED" != "true" ]; then
             echo ">>> Image-only mode: Copying raw kernel Image to artifacts"
-            cp -f out/Image out/final/ || true
+            cp -f out/dist/Image out/final/ || true
           fi
           
           echo ">>> Final Artifact Directory:"
