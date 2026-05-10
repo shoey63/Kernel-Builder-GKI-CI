@@ -80,9 +80,18 @@ jobs:
           echo ">>> Captured Official Google Hash: $(git rev-parse --short HEAD)"
 
           
-      - name: Build common kernel Image
+      - name: Build Pure GKI (Direct)
         run: |
-          bash ./scripts/build_kernel.sh
+          cd kernel_workspace
+          # Capture pure metadata
+          OFFICIAL_DATE=$(git -C common log -1 --format=%ct)
+    
+          # Execute build with "Ghost" metadata injection
+          tools/bazel run --config=local --config=stamp \
+            --action_env=SOURCE_DATE_EPOCH=$OFFICIAL_DATE \
+            --action_env=STABLE_BUILD_VERSION="g$OFFICIAL_HASH" \
+            //common:kernel_aarch64_dist -- --destdir=../out/dist
+
 
       - name: Pull stock boot.img from OTA
         if: env.REPACK_ENABLED == 'true'
@@ -121,10 +130,13 @@ jobs:
       - name: Prepare Final Artifacts
         run: |
           mkdir -p out/final
-          echo -e "MANIFEST_URL=${MANIFEST_URL}\nMANIFEST_BRANCH=${MANIFEST_BRANCH}\nOTA_URL=${OTA_URL}\nTIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S UTC')" > out/final/repack_metadata.txt
-          if [ "$REPACK_ENABLED" != "true" ]; then
-            echo ">>> Image-only mode: Copying raw kernel Image to artifacts"
-            cp -f out/Image out/final/ || true
+          echo -e "TYPE=STOCK_GKI\nBRANCH=${MANIFEST_BRANCH}\nTIMESTAMP=$(date -u '+%Y-%m-%d %H:%M:%S UTC')" > out/final/build_metadata.txt
+          
+          # Logic to find the Image whether it's in out/ or out/dist/
+          if [ -f "out/dist/Image" ]; then
+            cp -f out/dist/Image out/final/
+          elif [ -f "out/Image" ]; then
+            cp -f out/Image out/final/
           fi
           
           echo ">>> Final Artifact Directory:"
