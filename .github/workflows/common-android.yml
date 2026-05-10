@@ -70,7 +70,7 @@ jobs:
           curl -fsSL https://storage.googleapis.com/git-repo-downloads/repo -o "$HOME/bin/repo"
           chmod +x "$HOME/bin/repo"
           echo "$HOME/bin" >> "$GITHUB_PATH"
-
+      
       - name: Sync kernel source
         run: |
           set -euo pipefail
@@ -78,7 +78,12 @@ jobs:
           mkdir -p kernel_workspace
           cd kernel_workspace
           repo init -u "$MANIFEST_URL" -b "$MANIFEST_BRANCH" --depth=1
-          repo sync -c --no-tags --no-clone-bundle --current-branch --fail-fast -j4
+          repo sync -c --no-tags --no-clone-bundle --current-branch --fail-fast -j$(nproc)
+          
+          # Capture the PURE Google hash
+          cd common
+          echo "OFFICIAL_HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+          echo ">>> Captured Official Google Hash: $(git rev-parse --short HEAD)"
 
       - name: Integrate KernelSU-Next
         env:
