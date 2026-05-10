@@ -1,5 +1,5 @@
-name: Android GKI - KSU/Susfs (Customized)
-run-name: "Build GKI KSU/Susfs/Custom: ${{ inputs.build_name }} [${{ github.ref_name }}]"
+name: Custom GKI with KSU/Susfs
+run-name: "Build Custom GKI: ${{ inputs.build_name }} [${{ github.ref_name }}]"
 
 on:
   workflow_dispatch:
