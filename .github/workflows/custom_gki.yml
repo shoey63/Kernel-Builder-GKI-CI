@@ -119,6 +119,9 @@ jobs:
           
       - name: Build common kernel Image
         run: |
+          # Injecting the REAL Google identity into the script session
+          OFFICIAL_HASH=${{ env.OFFICIAL_HASH }} \
+          OFFICIAL_DATE=${{ env.OFFICIAL_DATE }} \
           bash ./scripts/build_kernel.sh
           
       - name: Pull stock boot.img from OTA
