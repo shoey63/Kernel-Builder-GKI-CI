@@ -14,6 +14,11 @@ for f in common/android/abi_gki_protected_exports*; do
   fi
 done
 
+echo ">>> Marking repo as clean..."
+cd common
+git ls-files -m | xargs -r git update-index --assume-unchanged
+cd ..
+
 echo ">>> Collecting Latest Hash and Commencing build: g$OFFICIAL_HASH"
 tools/bazel run --config=local --config=stamp \
   --action_env=SOURCE_DATE_EPOCH="$OFFICIAL_DATE" \
