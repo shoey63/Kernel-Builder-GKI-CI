@@ -1,4 +1,7 @@
 #!/usr/bin/env bash
+
+echo ">>> Creating proof-of-concept dummy file..."
+echo "This file proves git add is unnecessary" > build_logic_test.txt
 # Move into the workspace
 cd kernel_workspace/common || { echo ">>> ERROR: Path not found"; exit 1; }
 
