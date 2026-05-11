@@ -16,7 +16,6 @@ done
 
 echo ">>> Marking repo as clean..."
 cd common
-git add .
 git ls-files -m | xargs -r git update-index --assume-unchanged
 cd ..
 
