@@ -1,17 +1,22 @@
 #!/usr/bin/env bash
 cd common
 
-echo ">>> Integrating WireGuard into GKI..."
+echo ">>> Forcing WireGuard + Tunneling Dependencies..."
 
-# Path to the GKI defconfig (adjust based on your specific architecture if needed)
-DEFCONFIG="arch/arm64/configs/gki_defconfig"
+GKI_CONF="arch/arm64/configs/gki_defconfig"
 
-# Enable WireGuard and required dependencies
-echo "CONFIG_WIREGUARD=y" >> $DEFCONFIG
-echo "CONFIG_NET_UDP_TUNNEL=y" >> $DEFCONFIG
+# 1. Clean up any existing instances to avoid duplicates
+sed -i '/CONFIG_WIREGUARD/d' "$GKI_CONF"
+sed -i '/CONFIG_NET_UDP_TUNNEL/d' "$GKI_CONF"
 
-# Optional: Enable WireGuard Debugging for dmesg logs
-# echo "CONFIG_WIREGUARD_DEBUG=y" >> $DEFCONFIG
+# 2. Append the clean targets
+{
+  echo "CONFIG_WIREGUARD=y"
+  echo "CONFIG_NET_UDP_TUNNEL=y"
+  echo "CONFIG_CRYPTO_CURVE25519=y"
+} >> "$GKI_CONF"
 
-echo ">>> WireGuard integration complete."
+echo ">>> Verification:"
+grep -E "WIREGUARD|NET_UDP_TUNNEL" "$GKI_CONF"
+
 cd ..
