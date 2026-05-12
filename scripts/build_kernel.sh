@@ -41,4 +41,11 @@ cp -f "${IMAGE_PATH}" ../out/Image
 echo ">>> Extracting compiled kernel version string..."
 strings ../out/Image | grep "Linux version" | head -n 1
 
+echo ">>> Checking for WireGuard symbols in Image..."
+if strings ../out/Image | grep -qi "wireguard"; then
+    echo ">>> SUCCESS: WireGuard symbols found in Image binary."
+else
+    echo ">>> FAILURE: WireGuard was stripped or not compiled."
+fi
+
 echo ">>> Build complete!"
