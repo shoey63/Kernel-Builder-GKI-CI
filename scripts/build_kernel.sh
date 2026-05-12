@@ -10,6 +10,7 @@ mkdir -p ../out out/dist
 [ -d common ] || { echo "[-] common/ not found" >&2; exit 1; }
 
 echo ">>> Neutralizing ABI protected exports lists..."
+# Neutralize regardless: Harmless for stock, but essential if KSU/SUSFS or WG is injected
 for f in common/android/abi_gki_protected_exports*; do
   [ -f "$f" ] && > "$f"
 done
@@ -31,13 +32,17 @@ EOF
     sed -i '/name = "kernel_aarch64",/a \    post_defconfig_fragments = ["wireguard_fragment"],' BUILD.bazel
     
     echo ">>> Marking WG modified files as clean..."
-    git update-index --assume-unchanged BUILD.bazel wireguard_fragment
+    # BUILD.bazel is tracked, so we cloak it
+    git update-index --assume-unchanged BUILD.bazel
+    # wireguard_fragment is untracked, so we hide it locally
+    echo "wireguard_fragment" >> .git/info/exclude
     cd ..
 else
     echo ">>> Skipping WireGuard integration..."
 fi
 
 echo ">>> Marking repo as clean (cloaking any source modifications)..."
+# Universal cloaking for any tracked modified files
 git -C common ls-files -m | xargs -r git -C common update-index --assume-unchanged
 
 echo ">>> Commencing build: g$OFFICIAL_HASH"
