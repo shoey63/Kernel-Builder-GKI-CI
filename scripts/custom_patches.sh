@@ -1,12 +1,24 @@
 #!/usr/bin/env bash
 cd kernel_workspace/common || exit 1
 
-echo ">>> custom_patches.sh: Hardcoding build host identity..."
+echo ">>> EXPERIMENT: Cherry-picking Sumanth's DMA-BUF fix (228144d)..."
 
-# Force the build user and host at the source level
-# This ensures that even if Bazel's environment variables fail, 
-# the source code itself reports as a Google production server.
-sed -i 's/UTS_VERSION "#1 SMP PREEMPT %s"/UTS_VERSION "#1 SMP PREEMPT Tue May 12 07:40:22 UTC 2026"/g' init/version-timestamp.c 2>/dev/null || true
+# This commit is already in your tree, but we are going to re-apply it as a local commit.
+if git cherry-pick 228144d750eb06047b19a9e04612e6c63db01425; then
+    echo ">>> SUCCESS: Commit re-applied locally."
+else
+    echo ">>> INFO: Git detected it's a duplicate or failed. Forcing a dummy change..."
+    echo "// Stealth Test" >> drivers/dma-buf/dma-buf.c
+    git add drivers/dma-buf/dma-buf.c
+    git commit -m "STABLE: Force modification test"
+fi
 
-# Cloak the modification
-git update-index --assume-unchanged init/version-timestamp.c
+echo ">>> Hiding the modification from the index..."
+git update-index --assume-unchanged drivers/dma-buf/dma-buf.c
+
+# Final check: Does git think we are clean?
+if git diff-index --quiet HEAD --; then
+    echo ">>> Index reports CLEAN."
+else
+    echo ">>> Index reports DIRTY."
+fi
