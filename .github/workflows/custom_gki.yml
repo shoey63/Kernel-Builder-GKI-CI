@@ -9,7 +9,17 @@ on:
         required: false
         default: "gki-custom"
         type: string
-        
+
+      root_manager:
+        description: "Select Root Environment (Pre-patched with SuSFS)"
+        required: true
+        default: "KernelSU"
+        type: choice
+        options:
+          - KernelSU
+          - KernelSU-Next
+          - SukiSU-Ultra
+          
       enable_ksu_susfs:
         description: "Integrate KernelSU and SUSFS? (Uncheck to build a stock GKI kernel)"
         required: false
@@ -98,16 +108,17 @@ jobs:
           echo ">>> Captured Hash: $(git rev-parse --short HEAD)"
           echo ">>> Captured Date: $(git log -1 --format=%ct)"
 
-      - name: Integrate KernelSU-Next
+      - name: Integrate Root Manager (${{ inputs.root_manager }})
         if: inputs.enable_ksu_susfs == true
         env:
-          KSU_NEXT_SETUP_URL: https://raw.githubusercontent.com/shoey63/KernelSU/dev-susfs/kernel/setup.sh
-          KSU_NEXT_REPO_URL: https://github.com/shoey63/KernelSU.git
+          # Dynamically injects the chosen manager into the URL paths
+          KSU_NEXT_SETUP_URL: https://raw.githubusercontent.com/shoey63/${{ inputs.root_manager }}/dev-susfs/kernel/setup.sh
+          KSU_NEXT_REPO_URL: https://github.com/shoey63/${{ inputs.root_manager }}.git
           KSU_NEXT_REF: dev-susfs
           KSU_NEXT_HOOK_MODE: ""
         run: |
           bash ./scripts/integrate_ksu_next.sh  
-         
+    
       - name: Integrate SUSFS common-side
         if: inputs.enable_ksu_susfs == true
         env:
