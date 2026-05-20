@@ -53,23 +53,6 @@ else
     echo ">>> Skipping WireGuard integration..."
 fi
 
-if [ "$ROOT_MANAGER" = "SukiSU-Ultra" ]; then
-    echo ">>> SukiSU-Ultra detected! Forcing KPM via compiler override..."
-    
-    # Locate where the setup.sh script placed the root manager (usually drivers/kernelsu or fs/ksu)
-    KSU_DIR="common/drivers/kernelsu"
-    [ -d "common/fs/ksu" ] && KSU_DIR="common/fs/ksu"
-    
-    # 1. Bypass Kbuild sanitizer and pass the flag directly to the C compiler
-    echo "ccflags-y += -DCONFIG_KPM" >> "$KSU_DIR/Makefile"
-    
-    # 2. Ensure the Makefile actually traverses into the kpm/ folder
-    grep -q "obj-y += kpm/" "$KSU_DIR/Makefile" || echo "obj-y += kpm/" >> "$KSU_DIR/Makefile"
-    
-    echo ">>> Marking Makefile as clean..."
-    git -C common update-index --assume-unchanged "$KSU_DIR/Makefile"
-fi
-
 echo ">>> Marking repo as clean (cloaking any source modifications)..."
 # Universal cloaking for any tracked modified files
 git -C common ls-files -m | xargs -r git -C common update-index --assume-unchanged
