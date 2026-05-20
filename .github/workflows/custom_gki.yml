@@ -148,6 +148,7 @@ jobs:
       - name: Build common kernel Image
         env:
           WITH_WG: ${{ inputs.build_wg }}
+          ROOT_MANAGER: ${{ inputs.root_manager }}
         run: |
           # Injecting the REAL Google identity into the script session
           OFFICIAL_HASH=${{ env.OFFICIAL_HASH }} \
